@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-type Msg = { role: "user" | "assistant"; content: string };
+import { chat, type Msg } from "./actions";
 
 export default function Ia() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -25,13 +24,8 @@ export default function Ia() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await chat(next);
+      if ("error" in data) throw new Error(data.error);
       setMessages([...next, { role: "assistant", content: data.reply }]);
     } catch (err) {
       setError((err as Error).message || "Erro ao falar com a IA.");

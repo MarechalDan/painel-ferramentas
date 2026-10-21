@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-type Rate = { code: string; name: string; bid: number; pctChange: number; updatedAt: string };
+import { getRates, type Rate } from "./actions";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: v < 1 ? 4 : 2 });
 
@@ -10,6 +9,7 @@ export default function Moedas() {
   const [rates, setRates] = useState<Rate[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState("");
   const [amount, setAmount] = useState("1");
   const [from, setFrom] = useState("USD");
   const [to, setTo] = useState("BRL");
@@ -18,10 +18,10 @@ export default function Moedas() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/cotacao");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await getRates();
+      if ("error" in data) throw new Error(data.error);
       setRates(data.rates);
+      setSource(data.source);
     } catch (e) {
       setError((e as Error).message || "Erro ao carregar cotações");
     } finally {
@@ -56,9 +56,11 @@ export default function Moedas() {
           <div key={r.code} className="card">
             <div className="text-sm text-slate-400">{r.name} ({r.code})</div>
             <div className="mt-1 text-2xl font-bold">{brl(r.bid)}</div>
-            <div className={`text-sm ${r.pctChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {r.pctChange >= 0 ? "▲" : "▼"} {r.pctChange.toFixed(2)}% hoje
-            </div>
+            {r.pctChange !== null && (
+              <div className={`text-sm ${r.pctChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {r.pctChange >= 0 ? "▲" : "▼"} {r.pctChange.toFixed(2)}% hoje
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -89,7 +91,7 @@ export default function Moedas() {
             ? `${converted.toLocaleString("pt-BR", { maximumFractionDigits: converted < 1 ? 8 : 2 })} ${to}`
             : "—"}
         </div>
-        {rates[0] && <p className="mt-2 text-xs text-slate-500">Fonte: AwesomeAPI · atualizado em {rates[0].updatedAt}</p>}
+        {rates[0] && <p className="mt-2 text-xs text-slate-500">Fonte: {source} · atualizado em {rates[0].updatedAt}</p>}
       </div>
     </div>
   );

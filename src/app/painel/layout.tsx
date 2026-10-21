@@ -1,10 +1,9 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { SESSION_COOKIE, readSession } from "@/lib/auth";
+import { currentSession } from "@/lib/session";
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
-  const session = await readSession((await cookies()).get(SESSION_COOKIE)?.value);
+  const session = await currentSession();
   if (!session) redirect("/login");
 
   return (
