@@ -4,10 +4,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SESSION_COOKIE, checkCredentials, createSession, sessionMaxAge } from "@/lib/auth";
 
-export async function login(_prev: string | null, formData: FormData) {
+export type LoginState = { error: string; user: string } | null;
+
+export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const user = String(formData.get("user") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!checkCredentials(user, password)) return "Usuário ou senha inválidos.";
+  if (!checkCredentials(user, password)) return { error: "Usuário ou senha inválidos.", user };
 
   const store = await cookies();
   store.set(SESSION_COOKIE, await createSession(user), {
