@@ -34,7 +34,8 @@ async function askGemini(messages: Msg[], key: string) {
         .join("");
     } catch (e) {
       lastError = e;
-      if (!(e instanceof HttpError && e.status === 404)) break;
+      const retryable = e instanceof HttpError && [404, 429, 500, 503].includes(e.status);
+      if (!retryable) break;
     }
   }
   throw lastError;
@@ -62,8 +63,9 @@ export async function chat(input: Msg[]): Promise<{ reply: string } | { error: s
     .map((m) => ({ role: m.role, content: m.content.slice(0, 4000) }));
   if (messages.length === 0) return { error: "Mensagem vazia." };
 
-  const gemini = process.env.GEMINI_API_KEY;
-  const groq = process.env.GROQ_API_KEY;
+  const clean = (v?: string) => v?.trim().replace(/^["']|["']$/g, "") || undefined;
+  const gemini = clean(process.env.GEMINI_API_KEY);
+  const groq = clean(process.env.GROQ_API_KEY);
   if (!gemini && !groq) {
     return { error: "IA não configurada. Defina GEMINI_API_KEY ou GROQ_API_KEY nas variáveis de ambiente." };
   }
@@ -73,11 +75,12 @@ export async function chat(input: Msg[]): Promise<{ reply: string } | { error: s
     return { reply: reply || "(sem resposta)" };
   } catch (e) {
     console.error("Erro na IA:", e);
-    if (e instanceof HttpError && (e.status === 400 || e.status === 401 || e.status === 403)) {
-      return { error: "A chave da IA foi recusada. Confira a variável GEMINI_API_KEY/GROQ_API_KEY." };
-    }
-    if (e instanceof HttpError && e.status === 429) {
-      return { error: "Limite gratuito da IA atingido. Espere um pouco e tente de novo." };
+    if (e instanceof HttpError) {
+      const keyProblem = e.status === 401 || e.status === 403 || /api[ _]?key/i.test(e.message);
+      if (keyProblem) return { error: `A chave da IA foi recusada (${e.status}: ${e.message}). Confira a variável GEMINI_API_KEY/GROQ_API_KEY.` };
+      if (e.status === 429) return { error: "Limite gratuito da IA atingido. Espere um pouco e tente de novo." };
+      if (e.status === 503) return { error: "A IA está sobrecarregada no momento. Tente de novo em alguns segundos." };
+      return { error: `A IA retornou um erro (${e.status}: ${e.message}).` };
     }
     return { error: "A IA não respondeu agora. Tente de novo em instantes." };
   }
