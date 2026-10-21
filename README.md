@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Painel de Ferramentas
 
-## Getting Started
+App web com login que dá acesso a várias ferramentas:
 
-First, run the development server:
+- 🧮 Calculadora (com teclado e histórico)
+- 💵 Cotação ao vivo (dólar, euro, libra, peso argentino, iene, bitcoin) + conversor
+- 📏 Conversor de unidades (distância, peso, temperatura, velocidade)
+- ⚖️ Calculadora de IMC
+- 🔐 Gerador de senha
+- 📮 Consulta de CEP
+- 🤖 Assistente de IA (Gemini ou Groq, ambos com plano gratuito)
+
+Feito com Next.js + Tailwind. Não precisa de banco de dados.
+
+## Rodar no seu computador
 
 ```bash
+npm install
+cp .env.example .env.local   # edite os valores
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra http://localhost:3000. Sem `APP_USERS` definido, o login padrão é `admin` / `admin123` (só para testes).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variáveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variável | Para que serve |
+| --- | --- |
+| `AUTH_SECRET` | Chave secreta que assina o login. Use algo grande e aleatório (`openssl rand -base64 32`). |
+| `APP_USERS` | Usuários permitidos: `usuario:senha,outro:senha2` |
+| `GEMINI_API_KEY` | (Opcional) Chave grátis em https://aistudio.google.com/apikey |
+| `GROQ_API_KEY` | (Opcional) Alternativa: chave grátis em https://console.groq.com/keys |
 
-## Learn More
+## Hospedar de graça na Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Suba este projeto para um repositório no GitHub.
+2. Entre em https://vercel.com com sua conta do GitHub e clique em **Add New → Project**.
+3. Escolha o repositório e, em **Environment Variables**, adicione `AUTH_SECRET`, `APP_USERS` e (se quiser IA) `GEMINI_API_KEY`.
+4. Clique em **Deploy**. Em ~1 minuto você recebe um link `https://seu-projeto.vercel.app`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Também funciona em Netlify ou Render (plano gratuito) sem mudanças no código.
